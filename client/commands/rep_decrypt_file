@@ -1,0 +1,27 @@
+#!/bin/bash
+
+default_path="../client.py" 
+
+if [ -f $default_path ]; then
+    :
+elif [ -f "/.dockerenv" ]; then
+    default_path="/client/client.py"
+else
+    echo "[ERROR] Couldn't find the client.py file."
+    exit 1
+fi
+
+if [ $# -eq 0 ] || ([ $# -eq 1 ] && [ $1 = "--help" ]); then
+  bold=$(tput bold)
+  normal=$(tput sgr0)
+  dim=$(tput dim 2>/dev/null || echo "")
+  echo -e "
+  ${bold}Usage: rep_decrypt_file <encrypted file> <encryption metadata>${normal}
+    ${dim}The argument <encrypted file> contains the encrypted data to decrypt.
+    The argument <encryption metadata> contains the encryption information (keys) to decrypt the file.${normal}
+  "
+  exit 0
+fi
+
+# rep_decrypt_file <encrypted file> <encryption metadata>
+python3 "$default_path" -c rep_decrypt_file $1 $2

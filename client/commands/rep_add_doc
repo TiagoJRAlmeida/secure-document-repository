@@ -1,0 +1,15 @@
+#!/bin/bash
+
+default_path="../client.py" 
+
+if [ -f $default_path ]; then
+    :
+elif [ -f "/.dockerenv" ]; then
+    default_path="/client/client.py"
+else
+    echo "[ERROR] Couldn't find the client.py file."
+    exit 1
+fi
+
+# rep_add_doc <session file> <document name> <file>
+python3 "$default_path" -c rep_add_doc $1 $2 $3

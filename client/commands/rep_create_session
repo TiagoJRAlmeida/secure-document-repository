@@ -1,0 +1,30 @@
+#!/bin/bash
+
+default_path="../client.py" 
+
+if [ -f $default_path ]; then
+    :
+elif [ -f "/.dockerenv" ]; then
+    default_path="/client/client.py"
+else
+    echo "[ERROR] Couldn't find the client.py file."
+    exit 1
+fi
+
+if [ $# -eq 0 ] || ([ $# -eq 1 ] && [ $1 = "--help" ]); then
+  bold=$(tput bold)
+  normal=$(tput sgr0)
+  dim=$(tput dim 2>/dev/null || echo "")
+  echo -e "
+  ${bold}Usage: rep_create_session <organization> <username> <password> <credentials file> <output file>${normal}
+    ${dim}The argument <organization> refers to the name the organization you want to initiate a session with.
+    The argument <username> refers to your username inside the organization.
+    The argument <password> refers to the password used to encrypt you private key. (Private key necessary for signing, completely local and secure)
+    The argument <credentials file> refers to your key file, containing both public and private key.
+    The argument <output file> refers to the file were you want to store you session information. Recommended to be a JSON file.${normal}
+  "
+  exit 0
+fi
+
+# rep_create_session <organization> <username> <password> <credentials file> <session file>
+python3 "$default_path" -c rep_create_session $1 $2 $3 $4 $5

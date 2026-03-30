@@ -1,0 +1,29 @@
+services:
+  server:
+    build: ./repository
+    ports:
+      - "5000:5000"
+    networks:
+      - repo-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/pub_key')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  client:
+    build: ./client
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - repo-network
+    environment:
+      - REP_ADDRESS=server:5000
+    stdin_open: true
+    tty: true
+
+networks:
+  repo-network:
+    driver: bridge

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+default_path="../client.py" 
+
+if [ -f $default_path ]; then
+    :
+elif [ -f "/.dockerenv" ]; then
+    default_path="/client/client.py"
+else
+    echo "[ERROR] Couldn't find the client.py file."
+    exit 1
+fi
+
+# rep_get_doc_file <session file> <document name> [file]
+if [ -z "$3" ]; then
+    python3 "$default_path" -c rep_get_doc_file "$1" "$2"
+else
+    python3 "$default_path" -c rep_get_doc_file "$1" "$2" "$3"
+fi

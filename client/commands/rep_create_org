@@ -1,0 +1,31 @@
+#!/bin/bash
+
+default_path="../client.py" 
+
+if [ -f $default_path ]; then
+    :
+elif [ -f "/.dockerenv" ]; then
+    default_path="/client/client.py"
+else
+    echo "[ERROR] Couldn't find the client.py file."
+    exit 1
+fi
+
+if [ $# -eq 0 ] || ([ $# -eq 1 ] && [ $1 = "--help" ]); then
+  bold=$(tput bold)
+  normal=$(tput sgr0)
+  dim=$(tput dim 2>/dev/null || echo "")
+  echo -e "
+  ${bold}Usage: rep_create_org <organization> <username> <name> <email> <public key file>${normal}
+    ${dim}The argument <organization> refers to the name the organization being create will have.
+    The argument <username> refers to your (the owner) username.
+    The argument <name> refers to your (the owner) actual name.
+    The argument <email> refers to your (the owner) email.
+    The argument <public key file> refers to your (the owner) credentials file containing the public key.${normal}
+  "
+  exit 0
+fi
+
+# rep_create_org <organization> <username> <name> <email> <public key file>
+python3 "$default_path" -c rep_create_org $1 $2 $3 $4 $5
+

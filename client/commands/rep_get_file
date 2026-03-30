@@ -1,0 +1,31 @@
+#!/bin/bash
+
+default_path="../client.py" 
+
+if [ -f $default_path ]; then
+    :
+elif [ -f "/.dockerenv" ]; then
+    default_path="/client/client.py"
+else
+    echo "[ERROR] Couldn't find the client.py file."
+    exit 1
+fi
+
+if [ $# -eq 0 ] || ([ $# -eq 1 ] && [ $1 = "--help" ]); then
+  bold=$(tput bold)
+  normal=$(tput sgr0)
+  dim=$(tput dim 2>/dev/null || echo "")
+  echo -e "
+  ${bold}Usage: rep_get_file <file handle> [output file]${normal}
+    ${dim}The argument <file handle> is the handle of the file you want to retrieve from the repository.
+    The argument [output file] is completely optional and if passed the file data will be written to it.${normal}
+  "
+  exit 0
+fi
+
+# rep_get_file <file handle> [file]
+if [ -z "$2" ]; then
+    python3 "$default_path" -c rep_get_file "$1"
+else
+    python3 "$default_path" -c rep_get_file "$1" "$2"
+fi

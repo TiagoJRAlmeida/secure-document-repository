@@ -1,0 +1,31 @@
+#!/bin/bash
+
+FILE_FOLDER=$(dirname $0)
+
+# rep_list_docs <session file> [-s username] [-d nt/ot/et date]
+
+SESSION_FILE="$1"
+shift # Remove the session file from arguments
+
+# Base command
+CMD="python3 $FILE_FOLDER/../client.py -c rep_list_docs $SESSION_FILE"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -s) # Username flag
+            CMD+=" -s $2"
+            shift 2
+            ;;
+        -d) # Date flag with 2 arguments
+            CMD+=" -d $2 $3"
+            shift 3
+            ;;
+        *) # Unrecognized arguments
+            echo "Unknown argument: $1"
+            exit 1
+            ;;
+    esac
+done
+
+# Execute the constructed command
+eval "$CMD"
