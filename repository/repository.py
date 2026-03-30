@@ -127,18 +127,22 @@ def org_new_session():
     # First we need to decrypt the received key.
     # Since it's encrypted with the server public key we
     # need to decrypt with the server private key
-    with open("rep_priv_key.pem", "rb") as pkey_file:
-        rep_priv_key = load_pem_private_key(
-            pkey_file.read(), password=password.encode()
+    try:
+        with open("rep_priv_key.pem", "rb") as pkey_file:
+            rep_priv_key = load_pem_private_key(
+                pkey_file.read(),
+                password=os.environ.get("PASSWORD", "password1234").encode(),
+            )
+        decrypted_key = rep_priv_key.decrypt(
+            received_encrypted_key,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None,
+            ),
         )
-    decrypted_key = rep_priv_key.decrypt(
-        received_encrypted_key,
-        padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None,
-        ),
-    )
+    except Exception as e:
+        return json.dumps({"error": e}), 500
 
     # Divide the decrypted key into 2 parts (like it's done on the client side)
     new_encryption_key = decrypted_key[0:16]
@@ -2295,7 +2299,8 @@ def doc_get_doc_metadata():
             # Ler a chave do repositório
             with open("rep_priv_key.pem", "rb") as pkey_file:
                 rep_priv_key = load_pem_private_key(
-                    pkey_file.read(), password=password.encode()
+                    pkey_file.read(),
+                    password=os.environ.get("PASSWORD", "password1234").encode(),
                 )
 
             # Descifrar o "ALG"

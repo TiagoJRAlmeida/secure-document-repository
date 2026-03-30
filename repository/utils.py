@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 def rep_keys():
     if not os.path.exists("rep_pub_key.pem") or not os.path.exists("rep_priv_key.pem"):
-        password = os.environ.get("REPOSITORY_PASSWORD", "password12345")
+        password = os.environ.get("PASSWORD", "password1234")
         private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         public_key = private_key.public_key()
 

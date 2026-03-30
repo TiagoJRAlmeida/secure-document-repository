@@ -5,6 +5,8 @@ services:
       - "5000:5000"
     networks:
       - repo-network
+    environment:
+      - PASSWORD=6j2nbULi
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/pub_key')"]
       interval: 5s
