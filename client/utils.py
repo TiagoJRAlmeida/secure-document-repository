@@ -88,3 +88,32 @@ def pretty_print(title, message):
     for line in message.splitlines():
         print(f"  {DIM}{line}{RESET}")
     print(f"\n{divider}\n")
+
+
+def prepare_final_payload(base_payload, session_data):
+    # Load keys from session file
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
+
+    # Serialize the payload and encrypt it
+    payload_bytes = json.dumps(base_payload).encode()
+    encrypted_payload, iv = encrypt_data_AES_CBC(payload_bytes, encryption_key)
+
+    # Generate the next nonce
+    nonce = calculate_next_nonce(base64.b64decode(session_data["keys"]["nonce"]))
+
+    # Generate HMAC
+    session_id = session_data["session_id"]
+    message = session_id.encode() + payload_bytes + iv + nonce
+    hmac_signature = calculate_hmac(message, integrity_key)
+
+    # Set final payload
+    final_payload = {
+        "session_id": session_id,
+        "encrypted_payload": base64.b64encode(encrypted_payload).decode(),
+        "iv": base64.b64encode(iv).decode(),
+        "nonce": base64.b64encode(nonce).decode(),
+        "hmac": base64.b64encode(hmac_signature).decode(),
+    }
+
+    return final_payload

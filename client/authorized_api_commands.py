@@ -19,21 +19,26 @@ def rep_add_subject(state, session_file, username, name, email, credentials_file
         session_data = json.load(sf)
 
     # Carregar o session_id
-    session_id = session_data["SESSION_ID"]
+    session_id = session_data["session_id"]
 
     # Geramos o proximo nonce
-    nonce = calculate_next_nonce(base64.b64decode(session_data["KEYS"]["NONCE"]))
+    nonce = calculate_next_nonce(base64.b64decode(session_data["keys"]["NONCE"]))
 
     # Preparar o payload para cifrar
     payload = {
-        "organization_name": session_data["ORGANIZATION_NAME"],
-        "username": session_data["USERNAME"],
-        "new_subject": [username, name, email, keys_file["PUBLIC_KEY"]],
+        "organization": session_data["organization"],
+        "username": session_data["username"],
+        "new_subject": {
+            "username": username,
+            "name": name,
+            "email": email,
+            "public_key": keys_file["PUBLIC_KEY"],
+        },
     }
 
     # Carregar as chaves do session_file
-    encryption_key = base64.b64decode(session_data["KEYS"]["ENCRYPTION_KEY"])
-    integrity_key = base64.b64decode(session_data["KEYS"]["INTEGRITY_KEY"])
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
 
     # Usamos a encryption_key para cifrar o payload
     payload_bytes = json.dumps(payload).encode()
@@ -55,7 +60,7 @@ def rep_add_subject(state, session_file, username, name, email, credentials_file
     response = requests.post(url, json=final_payload)
 
     if response.status_code == 200:
-        session_data["KEYS"]["NONCE"] = base64.b64encode(nonce).decode()
+        session_data["keys"]["NONCE"] = base64.b64encode(nonce).decode()
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
         print("Subject added successfully")
@@ -73,21 +78,21 @@ def rep_suspend_subject(state, session_file, username):
         session_data = json.load(sf)
 
     # Carregar o session_id
-    session_id = session_data["SESSION_ID"]
+    session_id = session_data["session_id"]
 
     # Geramos o proximo nonce
-    nonce = calculate_next_nonce(base64.b64decode(session_data["KEYS"]["NONCE"]))
+    nonce = calculate_next_nonce(base64.b64decode(session_data["keys"]["NONCE"]))
 
     # Preparar o payload para cifrar
     payload = {
-        "organization_name": session_data["ORGANIZATION_NAME"],
-        "username": session_data["USERNAME"],
+        "organization": session_data["organization"],
+        "username": session_data["username"],
         "subject_to_suspend": username,
     }
 
     # Carregar as chaves do session_file
-    encryption_key = base64.b64decode(session_data["KEYS"]["ENCRYPTION_KEY"])
-    integrity_key = base64.b64decode(session_data["KEYS"]["INTEGRITY_KEY"])
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
 
     # Usamos a encryption_key para cifrar o payload
     payload_bytes = json.dumps(payload).encode()
@@ -110,7 +115,7 @@ def rep_suspend_subject(state, session_file, username):
     response = requests.post(url, json=final_payload)
 
     if response.status_code == 200:
-        session_data["KEYS"]["NONCE"] = base64.b64encode(nonce).decode()
+        session_data["keys"]["NONCE"] = base64.b64encode(nonce).decode()
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
         print("Operation successful")
@@ -128,21 +133,21 @@ def rep_activate_subject(state, session_file, username):
         session_data = json.load(sf)
 
     # Carregar o session_id
-    session_id = session_data["SESSION_ID"]
+    session_id = session_data["session_id"]
 
     # Geramos o proximo nonce
-    nonce = calculate_next_nonce(base64.b64decode(session_data["KEYS"]["NONCE"]))
+    nonce = calculate_next_nonce(base64.b64decode(session_data["keys"]["NONCE"]))
 
     # Preparar o payload para cifrar
     payload = {
-        "organization_name": session_data["ORGANIZATION_NAME"],
-        "username": session_data["USERNAME"],
+        "organization": session_data["organization"],
+        "username": session_data["username"],
         "subject_to_activate": username,
     }
 
     # Carregar as chaves do session_file
-    encryption_key = base64.b64decode(session_data["KEYS"]["ENCRYPTION_KEY"])
-    integrity_key = base64.b64decode(session_data["KEYS"]["INTEGRITY_KEY"])
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
 
     # Usamos a encryption_key para cifrar o payload
     payload_bytes = json.dumps(payload).encode()
@@ -165,7 +170,7 @@ def rep_activate_subject(state, session_file, username):
     response = requests.post(url, json=final_payload)
 
     if response.status_code == 200:
-        session_data["KEYS"]["NONCE"] = base64.b64encode(nonce).decode()
+        session_data["keys"]["NONCE"] = base64.b64encode(nonce).decode()
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
         print("Operation successful")
@@ -188,25 +193,25 @@ def rep_add_role(state, session_file, role):
         session_data = json.load(sf)
 
     # Carregar o session_id
-    session_id = session_data["SESSION_ID"]
+    session_id = session_data["session_id"]
 
     # Preparar o payload para enviar
     payload = {
-        "organization_name": session_data["ORGANIZATION_NAME"],
-        "username": session_data["USERNAME"],
+        "organization": session_data["organization"],
+        "username": session_data["username"],
         "role": role,
     }
 
     # Carregar as chaves do session_file
-    encryption_key = base64.b64decode(session_data["KEYS"]["ENCRYPTION_KEY"])
-    integrity_key = base64.b64decode(session_data["KEYS"]["INTEGRITY_KEY"])
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
 
     # Encriptar o payload para enviar
     payload_bytes = json.dumps(payload).encode()
     encrypted_payload, payload_iv = encrypt_data_AES_CBC(payload_bytes, encryption_key)
 
     # Geramos o proximo nonce
-    nonce = calculate_next_nonce(base64.b64decode(session_data["KEYS"]["NONCE"]))
+    nonce = calculate_next_nonce(base64.b64decode(session_data["keys"]["NONCE"]))
 
     # Gerar o hmac
     message = session_id.encode() + payload_bytes + payload_iv + nonce
@@ -224,7 +229,7 @@ def rep_add_role(state, session_file, role):
     response = requests.post(url, json=final_payload)
 
     if response.status_code == 200:
-        session_data["KEYS"]["NONCE"] = base64.b64encode(nonce).decode()
+        session_data["keys"]["NONCE"] = base64.b64encode(nonce).decode()
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
         print("Role created successfully")
@@ -252,26 +257,26 @@ def rep_suspend_role(state, session_file, role):
         session_data = json.load(sf)
 
     # Carregar o session_id
-    session_id = session_data["SESSION_ID"]
+    session_id = session_data["session_id"]
 
     # Preparar o payload para enviar
     payload = {
-        "organization_name": session_data["ORGANIZATION_NAME"],
-        "username": session_data["USERNAME"],
+        "organization": session_data["organization"],
+        "username": session_data["username"],
         "role": role,
         "operation": "suspend",
     }
 
     # Carregar as chaves do session_file
-    encryption_key = base64.b64decode(session_data["KEYS"]["ENCRYPTION_KEY"])
-    integrity_key = base64.b64decode(session_data["KEYS"]["INTEGRITY_KEY"])
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
 
     # Encriptar o payload para enviar
     payload_bytes = json.dumps(payload).encode()
     encrypted_payload, payload_iv = encrypt_data_AES_CBC(payload_bytes, encryption_key)
 
     # Geramos o proximo nonce
-    nonce = calculate_next_nonce(base64.b64decode(session_data["KEYS"]["NONCE"]))
+    nonce = calculate_next_nonce(base64.b64decode(session_data["keys"]["NONCE"]))
 
     # Gerar o hmac
     message = session_id.encode() + payload_bytes + payload_iv + nonce
@@ -289,7 +294,7 @@ def rep_suspend_role(state, session_file, role):
     response = requests.post(url, json=final_payload)
 
     if response.status_code == 200:
-        session_data["KEYS"]["NONCE"] = base64.b64encode(nonce).decode()
+        session_data["keys"]["NONCE"] = base64.b64encode(nonce).decode()
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
         print("Role status changed successfully")
@@ -312,26 +317,26 @@ def rep_reactivate_role(state, session_file, role):
         session_data = json.load(sf)
 
     # Carregar o session_id
-    session_id = session_data["SESSION_ID"]
+    session_id = session_data["session_id"]
 
     # Preparar o payload para enviar
     payload = {
-        "organization_name": session_data["ORGANIZATION_NAME"],
-        "username": session_data["USERNAME"],
+        "organization": session_data["organization"],
+        "username": session_data["username"],
         "role": role,
         "operation": "reactivate",
     }
 
     # Carregar as chaves do session_file
-    encryption_key = base64.b64decode(session_data["KEYS"]["ENCRYPTION_KEY"])
-    integrity_key = base64.b64decode(session_data["KEYS"]["INTEGRITY_KEY"])
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
 
     # Encriptar o payload para enviar
     payload_bytes = json.dumps(payload).encode()
     encrypted_payload, payload_iv = encrypt_data_AES_CBC(payload_bytes, encryption_key)
 
     # Geramos o proximo nonce
-    nonce = calculate_next_nonce(base64.b64decode(session_data["KEYS"]["NONCE"]))
+    nonce = calculate_next_nonce(base64.b64decode(session_data["keys"]["NONCE"]))
 
     # Gerar o hmac
     message = session_id.encode() + payload_bytes + payload_iv + nonce
@@ -349,7 +354,7 @@ def rep_reactivate_role(state, session_file, role):
     response = requests.post(url, json=final_payload)
 
     if response.status_code == 200:
-        session_data["KEYS"]["NONCE"] = base64.b64encode(nonce).decode()
+        session_data["keys"]["NONCE"] = base64.b64encode(nonce).decode()
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
         print("Role status changed successfully")
@@ -372,26 +377,26 @@ def rep_add_permission(state, session_file, role, username_or_permission):
         session_data = json.load(sf)
 
     # Carregar o session_id
-    session_id = session_data["SESSION_ID"]
+    session_id = session_data["session_id"]
 
     # Preparar o payload para enviar
     payload = {
-        "organization_name": session_data["ORGANIZATION_NAME"],
-        "username": session_data["USERNAME"],
+        "organization": session_data["organization"],
+        "username": session_data["username"],
         "role": role,
         "username_or_permission": username_or_permission,
     }
 
     # Carregar as chaves do session_file
-    encryption_key = base64.b64decode(session_data["KEYS"]["ENCRYPTION_KEY"])
-    integrity_key = base64.b64decode(session_data["KEYS"]["INTEGRITY_KEY"])
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
 
     # Encriptar o payload para enviar
     payload_bytes = json.dumps(payload).encode()
     encrypted_payload, payload_iv = encrypt_data_AES_CBC(payload_bytes, encryption_key)
 
     # Geramos o proximo nonce
-    nonce = calculate_next_nonce(base64.b64decode(session_data["KEYS"]["NONCE"]))
+    nonce = calculate_next_nonce(base64.b64decode(session_data["keys"]["NONCE"]))
 
     # Gerar o hmac
     message = session_id.encode() + payload_bytes + payload_iv + nonce
@@ -409,7 +414,7 @@ def rep_add_permission(state, session_file, role, username_or_permission):
     response = requests.post(url, json=final_payload)
 
     if response.status_code == 200:
-        session_data["KEYS"]["NONCE"] = base64.b64encode(nonce).decode()
+        session_data["keys"]["NONCE"] = base64.b64encode(nonce).decode()
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
         print(f"Operation successful: {response.json().get("message")}")
@@ -432,26 +437,26 @@ def rep_remove_permission(state, session_file, role, username_or_permission):
         session_data = json.load(sf)
 
     # Carregar o session_id
-    session_id = session_data["SESSION_ID"]
+    session_id = session_data["session_id"]
 
     # Preparar o payload para enviar
     payload = {
-        "organization_name": session_data["ORGANIZATION_NAME"],
-        "username": session_data["USERNAME"],
+        "organization": session_data["organization"],
+        "username": session_data["username"],
         "role": role,
         "username_or_permission": username_or_permission,
     }
 
     # Carregar as chaves do session_file
-    encryption_key = base64.b64decode(session_data["KEYS"]["ENCRYPTION_KEY"])
-    integrity_key = base64.b64decode(session_data["KEYS"]["INTEGRITY_KEY"])
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
 
     # Encriptar o payload para enviar
     payload_bytes = json.dumps(payload).encode()
     encrypted_payload, payload_iv = encrypt_data_AES_CBC(payload_bytes, encryption_key)
 
     # Geramos o proximo nonce
-    nonce = calculate_next_nonce(base64.b64decode(session_data["KEYS"]["NONCE"]))
+    nonce = calculate_next_nonce(base64.b64decode(session_data["keys"]["NONCE"]))
 
     # Gerar o hmac
     message = session_id.encode() + payload_bytes + payload_iv + nonce
@@ -469,7 +474,7 @@ def rep_remove_permission(state, session_file, role, username_or_permission):
     response = requests.post(url, json=final_payload)
 
     if response.status_code == 200:
-        session_data["KEYS"]["NONCE"] = base64.b64encode(nonce).decode()
+        session_data["keys"]["NONCE"] = base64.b64encode(nonce).decode()
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
         print(f"Operation successful: {response.json().get("message")}")
@@ -492,7 +497,7 @@ def rep_add_doc(state, session_file, document_name, file_path):
         session_data = json.load(sf)
 
     # Carregar o session_id
-    session_id = session_data["SESSION_ID"]
+    session_id = session_data["session_id"]
 
     # Verificar se o caminho para o ficheiro existe
     if not os.path.exists(file_path):
@@ -518,8 +523,8 @@ def rep_add_doc(state, session_file, document_name, file_path):
 
     # Preparar o payload para enviar
     payload = {
-        "organization_name": session_data["ORGANIZATION_NAME"],
-        "username": session_data["USERNAME"],
+        "organization": session_data["organization"],
+        "username": session_data["username"],
         "secret_key": base64.b64encode(secret_key).decode(),
         "document_iv": base64.b64encode(document_iv).decode(),
         "document_name": document_name,
@@ -528,15 +533,15 @@ def rep_add_doc(state, session_file, document_name, file_path):
     }
 
     # Carregar as chaves do session_file
-    encryption_key = base64.b64decode(session_data["KEYS"]["ENCRYPTION_KEY"])
-    integrity_key = base64.b64decode(session_data["KEYS"]["INTEGRITY_KEY"])
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
 
     # Encriptar o payload para enviar
     payload_bytes = json.dumps(payload).encode()
     encrypted_payload, payload_iv = encrypt_data_AES_CBC(payload_bytes, encryption_key)
 
     # Geramos o proximo nonce
-    nonce = calculate_next_nonce(base64.b64decode(session_data["KEYS"]["NONCE"]))
+    nonce = calculate_next_nonce(base64.b64decode(session_data["keys"]["NONCE"]))
 
     # Gerar o hmac
     message = (
@@ -563,7 +568,7 @@ def rep_add_doc(state, session_file, document_name, file_path):
     response = requests.post(url, json=final_payload)
 
     if response.status_code == 200:
-        session_data["KEYS"]["NONCE"] = base64.b64encode(nonce).decode()
+        session_data["keys"]["NONCE"] = base64.b64encode(nonce).decode()
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
         print("Document added successfully")
@@ -586,25 +591,25 @@ def rep_get_doc_metadata(state, session_file, document_name=None):
         session_data = json.load(sf)
 
     # Carregar o session_id
-    session_id = session_data["SESSION_ID"]
+    session_id = session_data["session_id"]
 
     # Preparar o payload para enviar
     payload = {
-        "organization_name": session_data["ORGANIZATION_NAME"],
-        "username": session_data["USERNAME"],
+        "organization": session_data["organization"],
+        "username": session_data["username"],
         "document_name": document_name,
     }
 
     # Carregar as chaves do session_file
-    encryption_key = base64.b64decode(session_data["KEYS"]["ENCRYPTION_KEY"])
-    integrity_key = base64.b64decode(session_data["KEYS"]["INTEGRITY_KEY"])
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
 
     # Encriptar o payload para enviar
     payload_bytes = json.dumps(payload).encode()
     encrypted_payload, payload_iv = encrypt_data_AES_CBC(payload_bytes, encryption_key)
 
     # Geramos o proximo nonce
-    nonce = calculate_next_nonce(base64.b64decode(session_data["KEYS"]["NONCE"]))
+    nonce = calculate_next_nonce(base64.b64decode(session_data["keys"]["NONCE"]))
 
     # Gerar o hmac
     message = session_id.encode() + payload_bytes + payload_iv + nonce
@@ -622,7 +627,7 @@ def rep_get_doc_metadata(state, session_file, document_name=None):
     response = requests.post(url, json=final_payload)
 
     if response.status_code == 200:
-        session_data["KEYS"]["NONCE"] = base64.b64encode(nonce).decode()
+        session_data["keys"]["NONCE"] = base64.b64encode(nonce).decode()
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
 
@@ -633,7 +638,7 @@ def rep_get_doc_metadata(state, session_file, document_name=None):
         received_hmac_signature = base64.b64decode(data["hmac"])
 
         # Verificar se o nonce é válido
-        if base64.b64encode(received_nonce).decode() in session_data["KEYS"]["NONCE"]:
+        if base64.b64encode(received_nonce).decode() in session_data["keys"]["NONCE"]:
             print("Error: Nonce not valid")
             sys.exit(-1)
 
@@ -696,25 +701,25 @@ def rep_delete_doc(state, session_file, document_name):
         session_data = json.load(sf)
 
     # Carregar o session_id
-    session_id = session_data["SESSION_ID"]
+    session_id = session_data["session_id"]
 
     # Preparar o payload para enviar
     payload = {
-        "organization_name": session_data["ORGANIZATION_NAME"],
-        "username": session_data["USERNAME"],
+        "organization": session_data["organization"],
+        "username": session_data["username"],
         "document_name": document_name,
     }
 
     # Carregar as chaves do session_file
-    encryption_key = base64.b64decode(session_data["KEYS"]["ENCRYPTION_KEY"])
-    integrity_key = base64.b64decode(session_data["KEYS"]["INTEGRITY_KEY"])
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
 
     # Encriptar o payload para enviar
     payload_bytes = json.dumps(payload).encode()
     encrypted_payload, payload_iv = encrypt_data_AES_CBC(payload_bytes, encryption_key)
 
     # Geramos o proximo nonce
-    nonce = calculate_next_nonce(base64.b64decode(session_data["KEYS"]["NONCE"]))
+    nonce = calculate_next_nonce(base64.b64decode(session_data["keys"]["NONCE"]))
 
     # Gerar o hmac
     message = session_id.encode() + payload_bytes + payload_iv + nonce
@@ -732,7 +737,7 @@ def rep_delete_doc(state, session_file, document_name):
     response = requests.post(url, json=final_payload)
 
     if response.status_code == 200:
-        session_data["KEYS"]["NONCE"] = base64.b64encode(nonce).decode()
+        session_data["keys"]["NONCE"] = base64.b64encode(nonce).decode()
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
         print("Document deleted successfully")
@@ -755,12 +760,12 @@ def rep_acl_doc(state, session_file, document_name, operation, role, permission)
         session_data = json.load(sf)
 
     # Carregar o session_id
-    session_id = session_data["SESSION_ID"]
+    session_id = session_data["session_id"]
 
     # Preparar o payload para enviar
     payload = {
-        "organization_name": session_data["ORGANIZATION_NAME"],
-        "username": session_data["USERNAME"],
+        "organization": session_data["organization"],
+        "username": session_data["username"],
         "document_name": document_name,
         "operation": operation,
         "role": role,
@@ -768,15 +773,15 @@ def rep_acl_doc(state, session_file, document_name, operation, role, permission)
     }
 
     # Carregar as chaves do session_file
-    encryption_key = base64.b64decode(session_data["KEYS"]["ENCRYPTION_KEY"])
-    integrity_key = base64.b64decode(session_data["KEYS"]["INTEGRITY_KEY"])
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
 
     # Encriptar o payload para enviar
     payload_bytes = json.dumps(payload).encode()
     encrypted_payload, payload_iv = encrypt_data_AES_CBC(payload_bytes, encryption_key)
 
     # Geramos o proximo nonce
-    nonce = calculate_next_nonce(base64.b64decode(session_data["KEYS"]["NONCE"]))
+    nonce = calculate_next_nonce(base64.b64decode(session_data["keys"]["NONCE"]))
 
     # Gerar o hmac
     message = session_id.encode() + payload_bytes + payload_iv + nonce
@@ -794,7 +799,7 @@ def rep_acl_doc(state, session_file, document_name, operation, role, permission)
     response = requests.post(url, json=final_payload)
 
     if response.status_code == 200:
-        session_data["KEYS"]["NONCE"] = base64.b64encode(nonce).decode()
+        session_data["keys"]["NONCE"] = base64.b64encode(nonce).decode()
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
         print("Document ACL updated successfully")

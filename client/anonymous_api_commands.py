@@ -44,7 +44,7 @@ def rep_create_org(state, organization, username, name, email, credentials_file)
     response = requests.post(url, json=payload)
 
     # Check response status
-    if response.status_code == 201:
+    if response.status_code == 200:
         logger.info("Organization created successfully.")
         sys.exit(0)
     else:
