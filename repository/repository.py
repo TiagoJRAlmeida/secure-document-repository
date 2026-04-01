@@ -273,7 +273,9 @@ def role_assume():
         return json.dumps({"error": "Role doesn't exist"}), 400
 
     # Verify if user has permissions to assume role
-    subject_roles = state["organizations"][organization_name]["subjects"][username]["roles"]
+    subject_roles = state["organizations"][organization_name]["subjects"][username][
+        "roles"
+    ]
     if role_to_assume not in subject_roles:
         return (
             json.dumps({"error": "Subject doesn't have the right to this role"}),
@@ -346,7 +348,7 @@ def role_list():
     filter_username = decrypted_payload["filter_username"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -392,7 +394,7 @@ def org_list_subjects():
     filter_username = decrypted_payload["filter_username"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -474,7 +476,7 @@ def role_list_permissions():
     filter_role = decrypted_payload["filter_role"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -508,7 +510,7 @@ def permission_list_roles():
     filter_permission = decrypted_payload["filter_permission"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -629,7 +631,7 @@ def org_new_subject():
     new_subject = decrypted_payload["new_subject"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -683,7 +685,7 @@ def org_suspend_subject():
     subject_to_suspend = decrypted_payload["subject_to_suspend"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -742,7 +744,7 @@ def org_activate_subject():
     subject_to_activate = decrypted_payload["subject_to_activate"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -787,7 +789,7 @@ def role_add():
     new_role = decrypted_payload["role"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -833,7 +835,7 @@ def role_change_status():
     operation = decrypted_payload["operation"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -885,7 +887,7 @@ def role_add_permission():
     username_or_permission = decrypted_payload["username_or_permission"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -952,7 +954,7 @@ def role_remove_permission():
     username_or_permission = decrypted_payload["username_or_permission"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -1023,7 +1025,7 @@ def doc_new():
     algorithm = decrypted_payload["algorithm"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -1116,7 +1118,7 @@ def doc_get_doc_metadata():
     document_name = decrypted_payload["document_name"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -1222,7 +1224,7 @@ def doc_clear_file_handle():
     document_name = decrypted_payload["document_name"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization
@@ -1273,7 +1275,7 @@ def doc_change_acl():
     permission = decrypted_payload["permission"]
 
     # Verify if organization exists
-    if organization not in state["organizations"]:
+    if organization_name not in state["organizations"]:
         return json.dumps({"error": "Organization doesn't exist"}), 400
 
     # Verify if user exists inside organization

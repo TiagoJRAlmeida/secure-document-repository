@@ -1,12 +1,7 @@
 import os
 import json
 import base64
-from cryptography.hazmat.primitives.serialization import (
-    load_pem_private_key,
-    load_pem_public_key,
-)
 from cryptography.hazmat.primitives import hashes, hmac as crypto_hmac
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.padding import PKCS7
@@ -73,7 +68,7 @@ def calculate_next_nonce(nonce):
     return new_nonce
 
 
-def pretty_print(title, message):
+def pretty_print(title, message, is_json=False):
     cols = shutil.get_terminal_size().columns
 
     # ANSI codes mirroring the bash tput styles
@@ -85,12 +80,15 @@ def pretty_print(title, message):
 
     print(f"\n{divider}\n")
     print(f"  {BOLD}{title}{RESET}\n")
-    for line in message.splitlines():
-        print(f"  {DIM}{line}{RESET}")
+    if not is_json:
+        for line in message.splitlines():
+            print(f"  {DIM}{line}{RESET}")
+    else:
+        print(f"  {DIM}{json.dumps(message)}{RESET}")
     print(f"\n{divider}\n")
 
 
-def prepare_final_payload(base_payload, session_data):
+def prepare_final_payload(base_payload, session_data, encrypted_document=None):
     # Load keys from session file
     encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
     integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
@@ -104,7 +102,10 @@ def prepare_final_payload(base_payload, session_data):
 
     # Generate HMAC
     session_id = session_data["session_id"]
-    message = session_id.encode() + payload_bytes + iv + nonce
+    if encrypted_document:
+        message = session_id.encode() + payload_bytes + iv + nonce + encrypted_document
+    else:
+        message = session_id.encode() + payload_bytes + iv + nonce
     hmac_signature = calculate_hmac(message, integrity_key)
 
     # Set final payload
@@ -115,5 +116,34 @@ def prepare_final_payload(base_payload, session_data):
         "nonce": base64.b64encode(nonce).decode(),
         "hmac": base64.b64encode(hmac_signature).decode(),
     }
+    if encrypted_document:
+        final_payload["encrypted_document_content"] = (
+            base64.b64encode(encrypted_document).decode(),
+        )
 
     return final_payload
+
+
+def validate_payload(data, session_data):
+    encrypted_payload = base64.b64decode(data["encrypted_payload"])
+    iv = base64.b64decode(data["payload_iv"])
+    nonce = base64.b64decode(data["nonce"])
+    hmac = base64.b64decode(data["hmac"])
+    encryption_key = base64.b64decode(session_data["keys"]["encryption_key"])
+    integrity_key = base64.b64decode(session_data["keys"]["integrity_key"])
+
+    # Verificar se o nonce é válido
+    if base64.b64encode(nonce).decode() in session_data["keys"]["nonce"]:
+        return {"error: Received Nonce not valid"}
+
+    # Decrypt payload
+    decrypted_payload = decrypt_data_AES_CBC(encrypted_payload, encryption_key, iv)
+
+    # Verify HMAC validity (integrity check)
+    payload_bytes = json.dumps(decrypted_payload).encode()
+    message = payload_bytes + iv + nonce
+    calculated_hmac_signature = calculate_hmac(message, integrity_key)
+    if calculated_hmac_signature != hmac:
+        return {"error: Received HMAC not valid."}
+
+    return {"success": decrypted_payload}

@@ -36,7 +36,7 @@ def rep_assume_role(state, session_file, role):
         session_data["roles"].append(role)
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
-        logger.info(f"Role {role} assumed successfully")
+        logger.info(f"Role {role} assumed successfully.")
         sys.exit(0)
     else:
         logger.error(f"{response.status_code} - {response.json().get("error")}")
