@@ -1,4 +1,3 @@
-import shutil
 import sys
 import os
 import json
@@ -10,7 +9,7 @@ from anonymous_api_commands import rep_get_file
 from utils import *
 
 
-logging.basicConfig(format="[%(levelname)s] %(message)s")
+logging.basicConfig(format="  [%(levelname)s] %(message)s")
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -39,11 +38,11 @@ def rep_add_subject(state, session_file, username, name, email, credentials_file
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/subject/create"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
         logger.info(f"Subject {username} added successfully.")
         sys.exit(0)
     else:
@@ -66,11 +65,11 @@ def rep_suspend_subject(state, session_file, username):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/subjects/suspend"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
         logger.info(f"Subject {username} has been suspended.")
         sys.exit(0)
     else:
@@ -93,11 +92,11 @@ def rep_activate_subject(state, session_file, username):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/subjects/activate"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
         logger.info(f"Subject {username} has been activated.")
         sys.exit(0)
     else:
@@ -120,11 +119,11 @@ def rep_add_role(state, session_file, role):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/role/add"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
         logger.info(f"Role {role} created successfully.")
         sys.exit(0)
     else:
@@ -153,11 +152,11 @@ def rep_suspend_role(state, session_file, role):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/role/change/status"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
         logger.info(f"Role {role} status changed successfully.")
         sys.exit(0)
     else:
@@ -181,11 +180,11 @@ def rep_reactivate_role(state, session_file, role):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/role/change/status"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
         logger.info(f"Role {role} status changed successfully.")
         sys.exit(0)
     else:
@@ -209,11 +208,11 @@ def rep_add_permission(state, session_file, role, username_or_permission):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/role/add/permission"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
         logger.info(f"{response.json().get("message")}.")
         sys.exit(0)
     else:
@@ -237,11 +236,11 @@ def rep_remove_permission(state, session_file, role, username_or_permission):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/role/remove/permission"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
         logger.info(f"{response.json().get("message")}.")
         sys.exit(0)
     else:
@@ -255,9 +254,12 @@ def rep_add_doc(state, session_file, document_name, file_path):
         session_data = json.load(sf)
 
     # Read document file content
-    with open(file_path, "rb") as f:
-        file_content = f.read()
-
+    try:
+        with open(file_path, "rb") as f:
+            file_content = f.read()
+    except FileNotFoundError:
+        logger.error(f"File {file_path} not found.")
+        sys.exit(1)
     # Calculate file handle (hash value of file content)
     digest = hashes.Hash(hashes.SHA256())
     digest.update(file_content)
@@ -285,11 +287,11 @@ def rep_add_doc(state, session_file, document_name, file_path):
     )
     url = f"http://{state['REP_ADDRESS']}/doc/create"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
         logger.info("Document added successfully")
         sys.exit(0)
     else:
@@ -312,12 +314,11 @@ def rep_get_doc_metadata(state, session_file, document_name=None):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/doc/get/metadata"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
-
         data = response.json()
         valid_payload = validate_payload(data, session_data)
         if "error" in valid_payload:
@@ -371,11 +372,11 @@ def rep_delete_doc(state, session_file, document_name):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/doc/clear/file-handle"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
         logger.info("Document deleted successfully")
         sys.exit(0)
     else:
@@ -401,11 +402,11 @@ def rep_acl_doc(state, session_file, document_name, operation, role, permission)
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/doc/change/acl"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
         logger.info("Document ACL updated successfully")
         sys.exit(0)
     else:

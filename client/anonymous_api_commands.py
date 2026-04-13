@@ -5,12 +5,15 @@ import requests
 import base64
 import logging
 from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives.serialization import load_pem_public_key
+from cryptography.hazmat.primitives.serialization import (
+    load_pem_public_key,
+    load_pem_private_key,
+)
 from cryptography.hazmat.primitives import hashes
 from utils import *
 
 
-logging.basicConfig(format="[%(levelname)s] %(message)s")
+logging.basicConfig(format="  [%(levelname)s] %(message)s")
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -30,10 +33,10 @@ def rep_create_org(state, organization, username, name, email, credentials_file)
 
     # Prepare payload to send
     payload = {
-        "name": organization,
+        "organization": organization,
         "owner": {
             "username": username,
-            "full_name": name,
+            "name": name,
             "email": email,
             "public_key": public_key,
         },
@@ -117,7 +120,7 @@ def rep_create_session(
 
     # Prepare the base payload
     base_payload = {
-        "organization_name": organization,
+        "organization": organization,
         "username": username,
         "public_key": keys_file["PUBLIC_KEY"],
     }
@@ -148,7 +151,7 @@ def rep_create_session(
 
         session_data = {
             "session_id": received_session_id,
-            "organization_name": organization,
+            "organization": organization,
             "username": username,
             "keys": {
                 "encryption_key": base64.b64encode(new_encryption_key).decode(),

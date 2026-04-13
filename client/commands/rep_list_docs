@@ -1,14 +1,22 @@
 #!/bin/bash
 
-FILE_FOLDER=$(dirname $0)
-
 # rep_list_docs <session file> [-s username] [-d nt/ot/et date]
+default_path="../client.py" 
+
+if [ -f $default_path ]; then
+    :
+elif [ -f "/.dockerenv" ]; then
+    default_path="/client/client.py"
+else
+    echo "[ERROR] Couldn't find the client.py file."
+    exit 1
+fi
 
 SESSION_FILE="$1"
 shift # Remove the session file from arguments
 
 # Base command
-CMD="python3 $FILE_FOLDER/../client.py -c rep_list_docs $SESSION_FILE"
+CMD="python3 $default_path -c rep_list_docs $SESSION_FILE"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in

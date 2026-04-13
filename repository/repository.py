@@ -13,7 +13,11 @@ from datetime import datetime, timedelta
 from crypto_utils import *
 from utils import *
 
+import logging
 
+logging.basicConfig(format="  [%(levelname)s] %(message)s")
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 app = Flask(__name__)
 
 rep_keys()
@@ -405,7 +409,7 @@ def org_list_subjects():
     # And return it's status
     organization = state["organizations"][organization_name]
     if filter_username:
-        if filter_username not in organization["subjects"]:
+        if filter_username in organization["subjects"]:
             subject_status = organization["subjects"][filter_username]["status"]
             return json.dumps({filter_username: subject_status}), 200
         else:
@@ -639,7 +643,7 @@ def org_new_subject():
         return json.dumps({"error": "Username doesn't exist"}), 400
 
     # Verify if username is already taken
-    if new_subject[0] in state["organizations"][organization_name]["subjects"]:
+    if new_subject["username"] in state["organizations"][organization_name]["subjects"]:
         return json.dumps({"error": "Username already exist"}), 400
 
     # Get client roles (only active ones are considered)
@@ -652,7 +656,9 @@ def org_new_subject():
     ]
 
     # Verify client has correct permissions and ddd new subject
-    if has_permission(user_roles, organization, "subject_new"):
+    if has_permission(
+        user_roles=user_roles, organization=organization, permission="subject_new"
+    ):
         organization["subjects"][new_subject["username"]] = {
             "organization": new_subject["name"],
             "email": new_subject["email"],
@@ -720,7 +726,9 @@ def org_suspend_subject():
     ]
 
     # Verify client has correct permissions and suspend subject
-    if has_permission(user_roles, organization, "subject_down"):
+    if has_permission(
+        user_roles=user_roles, organization=organization, permission="subject_down"
+    ):
         organization["subjects"][subject_to_suspend]["status"] = "suspended"
         return json.dumps({"success": "Subject status changed to suspended"}), 200
     else:
@@ -765,7 +773,9 @@ def org_activate_subject():
     ]
 
     # Verify client has correct permissions and activate subject
-    if has_permission(user_roles, organization, "subject_up"):
+    if has_permission(
+        user_roles=user_roles, organization=organization, permission="subject_up"
+    ):
         organization["subjects"][subject_to_activate]["status"] = "active"
         return json.dumps({"success": "Subject status changed to active"}), 200
     else:
@@ -806,7 +816,9 @@ def role_add():
     ]
 
     # Verify client has correct permissions and add new role
-    if has_permission(user_roles, organization, "role_new"):
+    if has_permission(
+        user_roles=user_roles, organization=organization, permission="role_new"
+    ):
         organization["acl"][new_role] = {
             "permissions": [],
             "status": "active",
@@ -853,15 +865,19 @@ def role_change_status():
 
     if operation == "suspend":
         # Verify client has correct permissions and suspend role
-        if has_permission(user_roles, organization, "role_down"):
+        if has_permission(
+            user_roles=user_roles, organization=organization, permission="role_down"
+        ):
             organization["acl"][role]["status"] = "suspended"
             return json.dumps({"message": "Role suspended"}), 200
         else:
             return json.dumps({"error": "Missing role_down permission"}), 400
     elif operation == "reactivate":
         # Verify client has correct permissions and activate role
-        if has_permission(user_roles, organization, "role_up"):
-            organization[role]["status"] = "active"
+        if has_permission(
+            user_roles=user_roles, organization=organization, permission="role_up"
+        ):
+            organization["acl"][role]["status"] = "active"
             return json.dumps({"message": "Role reactivated"}), 200
         else:
             return json.dumps({"error": "Missing role_up permission"}), 400
@@ -904,7 +920,9 @@ def role_add_permission():
     ]
     # Verify client has correct permissions and verify if recieved argument is
     # a username or permission
-    if has_permission(user_roles, organization, "role_mod"):
+    if has_permission(
+        user_roles=user_roles, organization=organization, permission="role_mod"
+    ):
         # If it's a permission
         if username_or_permission in organization["acl"]["manager"]["permissions"]:
             new_permission = username_or_permission
@@ -972,7 +990,9 @@ def role_remove_permission():
 
     # Verify client has correct permissions and verify if recieved argument is
     # a username or permission
-    if has_permission(user_roles, organization, "role_mod"):
+    if has_permission(
+        user_roles=user_roles, organization=organization, permission="role_mod"
+    ):
         # If it's a permission
         if username_or_permission in organization["acl"]["manager"]["permissions"]:
             new_permission = username_or_permission
@@ -1012,6 +1032,7 @@ def doc_new():
     if "error" in session_validity:
         return json.dumps(session_validity), 400
 
+    logger.info(data["encrypted_document_content"])
     payload_validity = decrypt_and_verify_payload(state, data)
     if "error" in payload_validity:
         return json.dumps(payload_validity), 400
@@ -1042,7 +1063,9 @@ def doc_new():
     ]
 
     # Verify client has correct permissions and save doc
-    if has_permission(user_roles, organization, "doc_new"):
+    if has_permission(
+        user_roles=user_roles, organization=organization, permission="doc_new"
+    ):
         # Load repository public key
         with open("rep_pub_key.pem", "rb") as pkey_file:
             rep_pub_key = load_pem_public_key(pkey_file.read())
@@ -1058,7 +1081,7 @@ def doc_new():
         )
 
         # Create document handle: hash(document name + organization name)
-        document_handle = calculate_document_handle(document_name, organization)
+        document_handle = calculate_document_handle(document_name, organization_name)
         # Verify if document handle/name already exists in the organization
         if document_handle in state["documents"]:
             return (
@@ -1126,7 +1149,7 @@ def doc_get_doc_metadata():
         return json.dumps({"error": "Username doesn't exist"}), 400
 
     # Create document handle: hash(document name + organization name)
-    document_handle = calculate_document_handle(document_name, organization)
+    document_handle = calculate_document_handle(document_name, organization_name)
     # Check if document_handle is valid
     if document_handle not in state["documents"]:
         return json.dumps({"error": "Document doesn't exist"}), 400
@@ -1141,7 +1164,9 @@ def doc_get_doc_metadata():
     ]
 
     # Verify client has correct permissions and save doc
-    if has_permission(user_roles, organization, "doc_read"):
+    if has_permission(
+        user_roles=user_roles, organization=organization, permission="doc_read"
+    ):
         # Read repository private key and decrypt secret key
         with open("rep_priv_key.pem", "rb") as pkey_file:
             rep_priv_key = load_pem_private_key(
@@ -1232,7 +1257,7 @@ def doc_clear_file_handle():
         return json.dumps({"error": "Username doesn't exist"}), 400
 
     # Create document handle: hash(document name + organization name)
-    document_handle = calculate_document_handle(document_name, organization)
+    document_handle = calculate_document_handle(document_name, organization_name)
     # Verify if document handle/name already exists in the organization
     if document_handle in state["documents"]:
         return json.dumps({"error": "Document doesn't exist"}), 400
@@ -1247,7 +1272,9 @@ def doc_clear_file_handle():
     ]
 
     # Verify client has correct permissions and save doc
-    if has_permission(user_roles, organization, "doc_delete"):
+    if has_permission(
+        user_roles=user_roles, organization=organization, permission="doc_delete"
+    ):
         # Clear file handle
         state["documents"][document_handle]["file_handle"] = None
         return json.dumps({"message": "Document deleted"}), 200
@@ -1283,9 +1310,9 @@ def doc_change_acl():
         return json.dumps({"error": "Username doesn't exist"}), 400
 
     # Create document handle: hash(document name + organization name)
-    document_handle = calculate_document_handle(document_name, organization)
+    document_handle = calculate_document_handle(document_name, organization_name)
     # Verify if document handle/name already exists in the organization
-    if document_handle in state["documents"]:
+    if document_handle not in state["documents"]:
         return json.dumps({"error": "Document doesn't exist"}), 400
 
     # Get client roles (only active ones are considered)
@@ -1297,8 +1324,9 @@ def doc_change_acl():
         if organization["acl"][role]["status"] == "active"
     ]
 
+    document = state["documents"][document_handle]
     # Verify client has correct permissions and save doc
-    if has_permission(user_roles, organization, "doc_acl"):
+    if has_permission(user_roles=user_roles, permission="doc_acl", document=document):
         # Check if operation is valid
         if operation not in ("+", "-"):
             return json.dumps({"error": "Invalid operation"}), 400

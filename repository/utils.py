@@ -157,10 +157,17 @@ def filter_doc_by_date(document, date, relation):
     return {"success": valid_document}
 
 
-def has_permission(user_roles, organization, permission):
-    for role in user_roles:
-        if permission in organization["acl"][role]["permissions"]:
-            return True
+def has_permission(user_roles, organization=None, permission=None, document=None):
+    if not any((organization, document)) or all((organization, document)):
+        return False
+    elif organization:
+        for role in user_roles:
+            if permission in organization["acl"][role]["permissions"]:
+                return True
+    else:
+        for role in user_roles:
+            if permission in document["acl"][role]:
+                return True
     return False
 
 

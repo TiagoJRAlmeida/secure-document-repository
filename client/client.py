@@ -9,7 +9,7 @@ from anonymous_api_commands import *
 from authenticated_api_commands import *
 from authorized_api_commands import *
 
-logging.basicConfig(format="[%(levelname)s] %(message)s")
+logging.basicConfig(format="  [%(levelname)s] %(message)s")
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -114,9 +114,6 @@ def parse_args(state):
     if args.repo:
         state["REP_ADDRESS"] = args.repo[0]
         logger.info("Overriding REP_ADDRESS from command line")
-
-    if args.command:
-        logger.info("Command: " + args.command)
 
     parsed_args = {
         "command": args.command,

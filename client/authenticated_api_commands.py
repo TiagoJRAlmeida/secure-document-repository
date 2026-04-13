@@ -5,7 +5,7 @@ import logging
 from utils import *
 
 
-logging.basicConfig(format="[%(levelname)s] %(message)s")
+logging.basicConfig(format="  [%(levelname)s] %(message)s")
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -22,7 +22,7 @@ def rep_assume_role(state, session_file, role):
 
     # Define base payload
     base_payload = {
-        "organization_name": session_data["organization_name"],
+        "organization": session_data["organization"],
         "username": session_data["username"],
         "role": role,
     }
@@ -30,9 +30,11 @@ def rep_assume_role(state, session_file, role):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/role/assume"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
         session_data["roles"].append(role)
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
@@ -55,7 +57,7 @@ def rep_drop_role(state, session_file, role):
 
     # Define the base payload
     base_payload = {
-        "organization_name": session_data["organization_name"],
+        "organization": session_data["organization"],
         "username": session_data["username"],
         "role": role,
     }
@@ -63,9 +65,11 @@ def rep_drop_role(state, session_file, role):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/role/drop"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
         session_data["roles"].remove(role)
         with open(session_file, "w") as sf:
             json.dump(session_data, sf)
@@ -84,7 +88,7 @@ def rep_list_roles(state, session_file):
 
     # Define the base payload
     base_payload = {
-        "organization_name": session_data["organization_name"],
+        "organization": session_data["organization"],
         "username": session_data["username"],
         "filter_username": None,
     }
@@ -92,12 +96,11 @@ def rep_list_roles(state, session_file):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/role/list"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
-
         roles_and_status = response.json()
         message = ""
         title = "Roles"
@@ -120,7 +123,7 @@ def rep_list_subjects(state, session_file, username=None):
 
     # Define the base payload
     base_payload = {
-        "organization_name": session_data["organization_name"],
+        "organization": session_data["organization"],
         "username": session_data["username"],
         "filter_username": username,
     }
@@ -128,12 +131,11 @@ def rep_list_subjects(state, session_file, username=None):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/subject/list"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
-
         usernames_and_status = response.json()
         message = ""
         title = "Subjects"
@@ -141,7 +143,7 @@ def rep_list_subjects(state, session_file, username=None):
             message = "No current subjects"
         else:
             for index, username in enumerate(usernames_and_status):
-                message = f"Subject {index + 1} - {username}: {usernames_and_status[username]}\n"
+                message += f"Subject {index + 1} - {username}: {usernames_and_status[username]}\n"
         pretty_print(title=title, message=message)
         sys.exit(0)
     else:
@@ -157,7 +159,7 @@ def rep_list_role_subjects(state, session_file, role):
 
     # Define the base payload
     base_payload = {
-        "organization_name": session_data["organization_name"],
+        "organization": session_data["organization"],
         "username": session_data["username"],
         "filter_role": role,
     }
@@ -165,12 +167,11 @@ def rep_list_role_subjects(state, session_file, role):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/role/list/subjects"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
-
         subjects_list = response.json()
         title = "Subjects"
         message = ""
@@ -194,7 +195,7 @@ def rep_list_subject_roles(state, session_file, username):
 
     # Define the base payload
     base_payload = {
-        "organization_name": session_data["organization_name"],
+        "organization": session_data["organization"],
         "username": session_data["username"],
         "filter_username": username,
     }
@@ -202,12 +203,11 @@ def rep_list_subject_roles(state, session_file, username):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/role/list"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
-
         roles_and_status = response.json()
         title = "Roles"
         message = ""
@@ -230,7 +230,7 @@ def rep_list_role_permissions(state, session_file, role):
 
     # Define the base payload
     base_payload = {
-        "organization_name": session_data["organization_name"],
+        "organization": session_data["organization"],
         "username": session_data["username"],
         "filter_role": role,
     }
@@ -238,12 +238,11 @@ def rep_list_role_permissions(state, session_file, role):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/role/list/permissions"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
-
         role_permissions = response.json()
         title = f"{role} Permissions"
         message = ""
@@ -266,7 +265,7 @@ def rep_list_permission_roles(state, session_file, permission):
 
     # Define the base payload
     base_payload = {
-        "organization_name": session_data["organization_name"],
+        "organization": session_data["organization"],
         "username": session_data["username"],
         "filter_permission": permission,
     }
@@ -274,12 +273,11 @@ def rep_list_permission_roles(state, session_file, permission):
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state['REP_ADDRESS']}/permission/list/role"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
-
         permission_roles = response.json()
         message = ""
         if permission_roles["type"] == "Organization roles":
@@ -311,7 +309,7 @@ def rep_list_docs(state, session_file, username=None, date_relation=None, date=N
 
     # Define the base payload
     base_payload = {
-        "organization_name": session_data["organization_name"],
+        "organization": session_data["organization"],
         "username": session_data["username"],
         "filter_username": username,
         "filter_date_relation": date_relation,
@@ -321,12 +319,11 @@ def rep_list_docs(state, session_file, username=None, date_relation=None, date=N
     final_payload = prepare_final_payload(base_payload, session_data)
     url = f"http://{state["REP_ADDRESS"]}/doc/list"
     response = requests.post(url, json=final_payload)
+    # Update nonce
+    with open(session_file, "w") as sf:
+        json.dump(session_data, sf)
 
     if response.status_code == 200:
-        session_data["keys"]["nonce"] = final_payload["nonce"]
-        with open(session_file, "w") as sf:
-            json.dump(session_data, sf)
-
         docs = response.json().get("documents")
         title = "Documents"
         message = ""

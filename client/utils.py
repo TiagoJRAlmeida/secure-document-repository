@@ -56,20 +56,16 @@ def decrypt_data_AES_CBC(encrypted_payload, key, iv):
 
 
 def calculate_next_nonce(nonce):
-    # Converter o nonce de byte para int
     nonce_int = int.from_bytes(nonce, byteorder="big")
-
-    # Incrementar o nonce
     nonce_int += 1
-
-    # Converter para bytes novamente
     new_nonce = nonce_int.to_bytes(16, byteorder="big")
 
     return new_nonce
 
 
 def pretty_print(title, message, is_json=False):
-    cols = shutil.get_terminal_size().columns
+    cols = 70
+    # cols = shutil.get_terminal_size().columns
 
     # ANSI codes mirroring the bash tput styles
     BOLD = "\033[1m"
@@ -117,9 +113,12 @@ def prepare_final_payload(base_payload, session_data, encrypted_document=None):
         "hmac": base64.b64encode(hmac_signature).decode(),
     }
     if encrypted_document:
-        final_payload["encrypted_document_content"] = (
-            base64.b64encode(encrypted_document).decode(),
-        )
+        final_payload["encrypted_document_content"] = base64.b64encode(
+            encrypted_document
+        ).decode()
+
+    # Update nonce
+    session_data["keys"]["nonce"] = final_payload["nonce"]
 
     return final_payload
 
