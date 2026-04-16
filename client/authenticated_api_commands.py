@@ -1,13 +1,10 @@
 import sys
 import json
 import requests
-import logging
 from utils import *
 
 
-logging.basicConfig(format="  [%(levelname)s] %(message)s")
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 
 def rep_assume_role(state, session_file, role):

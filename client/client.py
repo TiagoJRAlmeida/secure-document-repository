@@ -1,7 +1,6 @@
 import os
 import sys
 import argparse
-import logging
 import json
 import requests
 from local_commands import *
@@ -9,9 +8,7 @@ from anonymous_api_commands import *
 from authenticated_api_commands import *
 from authorized_api_commands import *
 
-logging.basicConfig(format="  [%(levelname)s] %(message)s")
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 
 def load_state():

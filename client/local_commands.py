@@ -2,16 +2,13 @@ import sys
 import json
 import base64
 import os
-import logging
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.padding import PKCS7
-from utils import pretty_print
+from utils import pretty_print, get_logger
 
-logging.basicConfig(format="[%(levelname)s] %(message)s")
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 
 def rep_subject_credentials(password, credentials_file):
@@ -51,6 +48,11 @@ def rep_decrypt_file(encrypted_file, metadata):
     if os.path.isfile(encrypted_file):
         with open(encrypted_file, "rb") as f:
             encrypted_file = f.read()
+    elif type(encrypted_file) == bytes:
+        pass
+    elif type(encrypted_file) == str:
+        encrypted_file = encrypted_file.encode()
+
     else:
         logger.error("Encrypted file does not exist.")
         sys.exit(1)
@@ -58,6 +60,8 @@ def rep_decrypt_file(encrypted_file, metadata):
     if os.path.isfile(metadata):
         with open(metadata, "r") as f:
             metadata = f.read()
+    elif type(metadata) == str:
+        pass
     else:
         logger.error("Metadata file does not exist.")
         sys.exit(1)
@@ -66,6 +70,7 @@ def rep_decrypt_file(encrypted_file, metadata):
         metadata = json.loads(metadata)
     except json.JSONDecodeError:
         logger.error("Metadata is not a valid JSON file.")
+        print(metadata)
         sys.exit(-1)
 
     # Get encryption key and IV from metadata file
@@ -85,6 +90,7 @@ def rep_decrypt_file(encrypted_file, metadata):
     decrypted_file = unpadder.update(decrypted_padded_file) + unpadder.finalize()
     data = decrypted_file.decode()
 
+    logger.info("File decrypted Successfully.")
     pretty_print(title="File Content", message=data)
 
     return data

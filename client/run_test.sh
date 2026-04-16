@@ -246,7 +246,7 @@ rep_add_doc "bob_session.json" "test_file_1Mb" test_file_1Mb
 
 echo ""
 step "Alice uploads small_story.txt" "rep_add_doc"
-rep_add_doc "alice_session.json" "small_story.txt" small_story
+rep_add_doc "alice_session.json" "small_story" small_story.txt
 
 continue_prompt
 
@@ -300,8 +300,8 @@ rep_get_doc_file "alice_session.json" "small_story"
 
 echo ""
 step "Saving document metadata before deletion" "rep_get_doc_metadata"
-rep_get_doc_metadata "alice_session.json" "small_story" > "metadata.json"
-file_handle=$(jq -r '.file_handle' "metadata.json")
+rep_get_doc_metadata "alice_session.json" "small_story" | tee "metadata.json"
+file_handle=$(python3 -c "import json,sys; print(json.load(open('metadata.json'))['file_handle'])")
 
 step "Deleting the document handle from the repository" "rep_delete_doc"
 rep_delete_doc "alice_session.json" "small_story"

@@ -3,15 +3,12 @@ import os
 import json
 import requests
 import base64
-import logging
 from local_commands import *
 from anonymous_api_commands import rep_get_file
 from utils import *
 
 
-logging.basicConfig(format="  [%(levelname)s] %(message)s")
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 
 def rep_add_subject(state, session_file, username, name, email, credentials_file):
@@ -319,7 +316,7 @@ def rep_get_doc_metadata(state, session_file, document_name=None):
         json.dump(session_data, sf)
 
     if response.status_code == 200:
-        data = response.json()
+        data = response.json()["success"]
         valid_payload = validate_payload(data, session_data)
         if "error" in valid_payload:
             logger.error(valid_payload["error"])
@@ -327,7 +324,8 @@ def rep_get_doc_metadata(state, session_file, document_name=None):
         else:
             decrypted_payload = valid_payload["success"]
 
-        pretty_print("Metadata", json.dumps(decrypted_payload), True)
+        logger.info("File Metadata retrieved successfully.")
+        pretty_print("Metadata", decrypted_payload, False, True)
         return json.dumps(decrypted_payload)
     else:
         logger.error(f"{response.status_code} - {response.json().get("error")}")
@@ -352,8 +350,6 @@ def rep_get_doc_file(state, session_file, document_name, output_file=None):
     if output_file:
         with open(output_file, "w") as f:
             f.write(file_content)
-    else:
-        pretty_print(title="File Content", message=file_content)
     sys.exit(0)
 
 

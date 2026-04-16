@@ -1,11 +1,38 @@
 import os
+import sys
 import json
 import base64
 from cryptography.hazmat.primitives import hashes, hmac as crypto_hmac
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.padding import PKCS7
-import shutil
+import logging
+
+
+class ColorFormatter(logging.Formatter):
+    COLORS = {
+        logging.DEBUG: "\033[36m",
+        logging.INFO: "\033[32m",
+        logging.WARNING: "\033[33m",
+        logging.ERROR: "\033[31m",
+        logging.CRITICAL: "\033[1;31m",
+    }
+    RESET = "\033[0m"
+
+    def format(self, record):
+        color = self.COLORS.get(record.levelno, self.RESET)
+        formatter = logging.Formatter(f"{color}[%(levelname)s] %(message)s{self.RESET}")
+        return formatter.format(record)
+
+
+def get_logger(name: str) -> logging.Logger:
+    logger = logging.getLogger(name)
+    if not logger.handlers:  # Avoid adding duplicate handlers
+        handler = logging.StreamHandler()
+        handler.setFormatter(ColorFormatter())
+        logger.setLevel(logging.INFO)
+        logger.addHandler(handler)
+    return logger
 
 
 def calculate_hmac(data, key):
@@ -63,7 +90,11 @@ def calculate_next_nonce(nonce):
     return new_nonce
 
 
-def pretty_print(title, message, is_json=False):
+def pretty_print(title, message, is_list=True, is_json=False):
+    if is_list and is_json:
+        print("Both is_list and is_json options are on.")
+        return
+
     cols = 70
     # cols = shutil.get_terminal_size().columns
 
@@ -74,14 +105,17 @@ def pretty_print(title, message, is_json=False):
 
     divider = "─" * cols
 
-    print(f"\n{divider}\n")
-    print(f"  {BOLD}{title}{RESET}\n")
-    if not is_json:
+    print(f"\n{divider}\n", file=sys.stderr)
+    print(f"  {BOLD}{title}{RESET}\n", file=sys.stderr)
+    if is_json:
+        print(json.dumps(message, indent=2))
+    elif is_list:
         for line in message.splitlines():
             print(f"  {DIM}{line}{RESET}")
     else:
-        print(f"  {DIM}{json.dumps(message)}{RESET}")
-    print(f"\n{divider}\n")
+        print(f"  {DIM}{message}{RESET}")
+
+    print(f"\n{divider}\n", file=sys.stderr)
 
 
 def prepare_final_payload(base_payload, session_data, encrypted_document=None):

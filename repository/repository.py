@@ -1109,7 +1109,7 @@ def doc_new():
             "name": document_name,
             "creation_date": current_time,
             "creator": username,
-            "organization": organization,
+            "organization": organization_name,
             "file_handle": file_handle,
             "acl": {"manager": ["doc_acl", "doc_read", "doc_delete"]},
             "deleter": None,
@@ -1153,6 +1153,8 @@ def doc_get_doc_metadata():
     # Check if document_handle is valid
     if document_handle not in state["documents"]:
         return json.dumps({"error": "Document doesn't exist"}), 400
+    else:
+        document = state["documents"][document_handle]
 
     # Get client roles (only active ones are considered)
     organization = state["organizations"][organization_name]
@@ -1164,9 +1166,7 @@ def doc_get_doc_metadata():
     ]
 
     # Verify client has correct permissions and save doc
-    if has_permission(
-        user_roles=user_roles, organization=organization, permission="doc_read"
-    ):
+    if has_permission(user_roles=user_roles, permission="doc_read", document=document):
         # Read repository private key and decrypt secret key
         with open("rep_priv_key.pem", "rb") as pkey_file:
             rep_priv_key = load_pem_private_key(
@@ -1259,8 +1259,10 @@ def doc_clear_file_handle():
     # Create document handle: hash(document name + organization name)
     document_handle = calculate_document_handle(document_name, organization_name)
     # Verify if document handle/name already exists in the organization
-    if document_handle in state["documents"]:
+    if document_handle not in state["documents"]:
         return json.dumps({"error": "Document doesn't exist"}), 400
+    else:
+        document = state["documents"][document_handle]
 
     # Get client roles (only active ones are considered)
     organization = state["organizations"][organization_name]
@@ -1273,7 +1275,7 @@ def doc_clear_file_handle():
 
     # Verify client has correct permissions and save doc
     if has_permission(
-        user_roles=user_roles, organization=organization, permission="doc_delete"
+        user_roles=user_roles, permission="doc_delete", document=document
     ):
         # Clear file handle
         state["documents"][document_handle]["file_handle"] = None

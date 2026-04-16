@@ -3,7 +3,6 @@ import sys
 import json
 import requests
 import base64
-import logging
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.serialization import (
     load_pem_public_key,
@@ -13,9 +12,7 @@ from cryptography.hazmat.primitives import hashes
 from utils import *
 
 
-logging.basicConfig(format="  [%(levelname)s] %(message)s")
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 
 def rep_create_org(state, organization, username, name, email, credentials_file):
@@ -192,7 +189,11 @@ def rep_get_file(state, file_handle, output_file=None):
                 f.write(encrypted_file_content)
             sys.exit(0)
         else:
-            print(encrypted_file_content)
+            pretty_print(
+                title="Encrypted File Content",
+                message=encrypted_file_content,
+                is_list=False,
+            )
             return encrypted_file_content
     else:
         logger.error(f"{response.status_code} - {response.json().get("error")}")
