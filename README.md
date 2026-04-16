@@ -2,7 +2,7 @@
 
 A cryptographically secured document repository with role-based access control, built from scratch using Python. The system follows a client-server architecture where all communication is encrypted and integrity-verified, documents are stored encrypted at rest, and every operation is gated behind a session-authenticated, permission-checked API.
 
-Designed and implemented as a personal project to explore applied cryptography and access control system design.
+Originally developed during my Bachelor's in Computer Engineering, this project was later revisited as a personal endeavour during my Master's in Cybersecurity — migrating to a containerized architecture for portability, cutting roughly 3,000 lines of redundant code, and strengthening the security design.
 
 ---
 
@@ -212,7 +212,7 @@ Require an active session and the appropriate permission.
 **The only requirement is [Docker](https://docs.docker.com/get-docker/).** Everything else is installed inside the containers automatically.
 
 ```bash
-git clone https://github.com/your-username/secure-document-repository
+git clone https://github.com/TiagoJRAlmeida/secure-document-repository
 cd secure-document-repository
 ./start.sh
 ```
